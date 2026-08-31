@@ -1,0 +1,124 @@
+name: charge_sheet
+display_name: "Charge Sheet Approval Workflow"
+description: "Standard approval flow for police charge sheets before court filing"
+
+states:
+  - name: DRAFT
+    display_name: "Draft"
+    description: "Charge sheet being prepared by investigating officer"
+    is_initial: true
+    is_terminal: false
+    sla_hours: null
+    escalation_role: null
+
+  - name: SUBMITTED_FOR_REVIEW
+    display_name: "Submitted for Review"
+    description: "Awaiting supervisor review and approval"
+    is_initial: false
+    is_terminal: false
+    sla_hours: 24
+    escalation_role: DEPT_ADMIN
+
+  - name: SUPERVISOR_APPROVED
+    display_name: "Supervisor Approved"
+    description: "Supervisor has approved; awaiting legal review by prosecutor"
+    is_initial: false
+    is_terminal: false
+    sla_hours: 48
+    escalation_role: DEPT_ADMIN
+
+  - name: LEGAL_REVIEW
+    display_name: "Legal Review"
+    description: "Under review by public prosecutor"
+    is_initial: false
+    is_terminal: false
+    sla_hours: 72
+    escalation_role: SUPERVISOR
+
+  - name: FILED_WITH_COURT
+    display_name: "Filed with Court"
+    description: "Charge sheet has been formally filed with the court"
+    is_initial: false
+    is_terminal: false
+    sla_hours: null
+    escalation_role: null
+
+  - name: ARCHIVED
+    display_name: "Archived"
+    description: "Case concluded and document archived"
+    is_initial: false
+    is_terminal: true
+    sla_hours: null
+    escalation_role: null
+
+  - name: REJECTED
+    display_name: "Rejected / Returned for Revision"
+    description: "Returned to investigating officer for corrections"
+    is_initial: false
+    is_terminal: false
+    sla_hours: 48
+    escalation_role: SUPERVISOR
+
+transitions:
+  - from_state: DRAFT
+    to_state: SUBMITTED_FOR_REVIEW
+    required_role: INVESTIGATING_OFFICER
+    display_name: "Submit for Supervisor Review"
+    requires_comment: false
+    description: "IO submits completed charge sheet for supervisor approval"
+
+  - from_state: SUBMITTED_FOR_REVIEW
+    to_state: SUPERVISOR_APPROVED
+    required_role: SUPERVISOR
+    display_name: "Approve"
+    requires_comment: false
+    description: "Supervisor approves charge sheet for legal review"
+
+  - from_state: SUBMITTED_FOR_REVIEW
+    to_state: REJECTED
+    required_role: SUPERVISOR
+    display_name: "Return for Revision"
+    requires_comment: true
+    description: "Supervisor returns charge sheet for corrections"
+
+  - from_state: SUPERVISOR_APPROVED
+    to_state: LEGAL_REVIEW
+    required_role: PROSECUTOR
+    display_name: "Accept for Legal Review"
+    requires_comment: false
+    description: "Prosecutor accepts and begins legal review"
+
+  - from_state: SUPERVISOR_APPROVED
+    to_state: REJECTED
+    required_role: PROSECUTOR
+    display_name: "Return for Revision"
+    requires_comment: true
+    description: "Prosecutor returns to IO for corrections before legal review"
+
+  - from_state: LEGAL_REVIEW
+    to_state: FILED_WITH_COURT
+    required_role: PROSECUTOR
+    display_name: "File with Court"
+    requires_comment: false
+    description: "Prosecutor files the approved charge sheet with the court"
+
+  - from_state: LEGAL_REVIEW
+    to_state: REJECTED
+    required_role: PROSECUTOR
+    display_name: "Return for Revision"
+    requires_comment: true
+    description: "Prosecutor finds issues requiring correction"
+
+  - from_state: FILED_WITH_COURT
+    to_state: ARCHIVED
+    required_role: COURT_CLERK
+    display_name: "Archive"
+    requires_comment: false
+    description: "Court clerk archives the filed charge sheet"
+
+  - from_state: REJECTED
+    to_state: DRAFT
+    required_role: INVESTIGATING_OFFICER
+    display_name: "Revise and Resubmit"
+    requires_comment: true
+    description: "IO acknowledges feedback and begins revision"

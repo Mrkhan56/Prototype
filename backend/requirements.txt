@@ -1,0 +1,53 @@
+# ==============================================================================
+# Secure Digital Document Management System — Python Dependencies
+# ==============================================================================
+
+# --- Web Framework ---
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+python-multipart==0.0.20       # For file uploads
+
+# --- Database ---
+sqlalchemy[asyncio]==2.0.36
+asyncpg==0.30.0                # Async PostgreSQL driver
+alembic==1.14.1                # Database migrations
+pgvector==0.3.6                # pgvector integration for SQLAlchemy
+
+# --- Authentication ---
+PyJWT[crypto]==2.10.1          # JWT tokens (with RSA/EC support)
+cryptography==44.0.0           # AES-256-GCM for TOTP secret encryption
+pwdlib[argon2]==0.2.1          # Argon2id password hashing (passlib replacement)
+pyotp==2.9.0                   # TOTP-based MFA
+qrcode[pil]==8.0               # QR code generation for MFA setup
+
+# --- File Processing ---
+python-magic==0.4.27           # File type detection via magic bytes
+Pillow==11.1.0                 # Image processing and thumbnails
+pytesseract==0.3.13            # OCR (requires Tesseract system package)
+pdf2image==1.17.0              # PDF to image conversion (requires poppler)
+
+# --- Storage ---
+boto3==1.36.2                  # S3-compatible storage with Object Lock
+botocore==1.36.2
+
+# --- Security ---
+pyclamd==0.4.0                 # ClamAV integration for malware scanning
+
+# --- Search ---
+sentence-transformers==3.3.1   # Optional: semantic search embeddings
+
+# --- Scheduling ---
+apscheduler==3.10.4            # Background task scheduling (SLA checks)
+
+# --- Utilities ---
+pydantic==2.10.4               # Data validation
+pydantic-settings==2.7.1       # Settings from environment variables
+httpx==0.28.1                  # Async HTTP client
+pyyaml==6.0.2                  # YAML config parsing (workflow configs)
+python-dateutil==2.9.0         # Date utilities
+
+# --- Testing ---
+pytest==8.3.4
+pytest-asyncio==0.25.0
+pytest-cov==6.0.0
+httpx==0.28.1                  # Also used as test client for FastAPI

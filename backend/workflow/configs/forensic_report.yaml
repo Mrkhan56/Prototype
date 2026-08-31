@@ -1,0 +1,124 @@
+name: forensic_report
+display_name: "Forensic Report Review Workflow"
+description: "Quality-assured review flow for forensic lab reports before court submission"
+
+states:
+  - name: DRAFT
+    display_name: "Draft"
+    description: "Forensic report being prepared by analyst"
+    is_initial: true
+    is_terminal: false
+    sla_hours: null
+    escalation_role: null
+
+  - name: ANALYST_REVIEW
+    display_name: "Analyst Self-Review"
+    description: "Primary analyst reviewing their own report before peer review"
+    is_initial: false
+    is_terminal: false
+    sla_hours: 24
+    escalation_role: SUPERVISOR
+
+  - name: PEER_REVIEW
+    display_name: "Peer Review"
+    description: "Second forensic analyst conducting independent peer review"
+    is_initial: false
+    is_terminal: false
+    sla_hours: 48
+    escalation_role: SUPERVISOR
+
+  - name: QA_APPROVED
+    display_name: "QA / Supervisor Approved"
+    description: "Forensic lab supervisor has quality-approved the report"
+    is_initial: false
+    is_terminal: false
+    sla_hours: 24
+    escalation_role: DEPT_ADMIN
+
+  - name: SUBMITTED_TO_COURT
+    display_name: "Submitted to Court"
+    description: "Forensic report formally submitted to the court via prosecutor"
+    is_initial: false
+    is_terminal: false
+    sla_hours: null
+    escalation_role: null
+
+  - name: ARCHIVED
+    display_name: "Archived"
+    description: "Report archived after case conclusion"
+    is_initial: false
+    is_terminal: true
+    sla_hours: null
+    escalation_role: null
+
+  - name: REJECTED
+    display_name: "Rejected / Returned for Revision"
+    description: "Report returned for corrections at any review stage"
+    is_initial: false
+    is_terminal: false
+    sla_hours: 48
+    escalation_role: SUPERVISOR
+
+transitions:
+  - from_state: DRAFT
+    to_state: ANALYST_REVIEW
+    required_role: FORENSIC_ANALYST
+    display_name: "Submit for Self-Review"
+    requires_comment: false
+    description: "Analyst marks report complete and begins self-review"
+
+  - from_state: ANALYST_REVIEW
+    to_state: PEER_REVIEW
+    required_role: FORENSIC_ANALYST
+    display_name: "Submit for Peer Review"
+    requires_comment: false
+    description: "Analyst approves their own work and submits for peer review"
+
+  - from_state: ANALYST_REVIEW
+    to_state: REJECTED
+    required_role: FORENSIC_ANALYST
+    display_name: "Return to Draft"
+    requires_comment: true
+    description: "Analyst finds issues during self-review"
+
+  - from_state: PEER_REVIEW
+    to_state: QA_APPROVED
+    required_role: FORENSIC_ANALYST
+    display_name: "Approve (Peer)"
+    requires_comment: false
+    description: "Peer analyst approves the report quality"
+
+  - from_state: PEER_REVIEW
+    to_state: REJECTED
+    required_role: FORENSIC_ANALYST
+    display_name: "Return for Revision"
+    requires_comment: true
+    description: "Peer reviewer finds issues requiring correction"
+
+  - from_state: QA_APPROVED
+    to_state: SUBMITTED_TO_COURT
+    required_role: PROSECUTOR
+    display_name: "Submit to Court"
+    requires_comment: false
+    description: "Prosecutor formally submits the approved forensic report"
+
+  - from_state: QA_APPROVED
+    to_state: REJECTED
+    required_role: SUPERVISOR
+    display_name: "Return for Revision"
+    requires_comment: true
+    description: "Supervisor identifies quality issues before court submission"
+
+  - from_state: SUBMITTED_TO_COURT
+    to_state: ARCHIVED
+    required_role: COURT_CLERK
+    display_name: "Archive"
+    requires_comment: false
+    description: "Court clerk archives the submitted forensic report"
+
+  - from_state: REJECTED
+    to_state: DRAFT
+    required_role: FORENSIC_ANALYST
+    display_name: "Revise and Resubmit"
+    requires_comment: true
+    description: "Analyst acknowledges feedback and begins revision"
