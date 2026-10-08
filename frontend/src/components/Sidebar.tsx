@@ -9,6 +9,7 @@ import {
   Settings,
   Plus,
   Lock,
+  LogOut,
 } from "lucide-react";
 import { UserRole } from "../types";
 import { MOCK_USERS } from "../api/mockData";
@@ -24,6 +25,7 @@ interface SidebarProps {
   documentCount?: number;
   auditCount?: number;
   onOpenSettings?: () => void;
+  onLogout?: () => void;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -35,6 +37,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   documentCount = 128,
   auditCount = 4,
   onOpenSettings,
+  onLogout,
 }) => {
   const currentUser = MOCK_USERS[currentRole] ?? MOCK_USERS[UserRole.INVESTIGATING_OFFICER];
 
@@ -201,13 +204,24 @@ export const Sidebar: React.FC<SidebarProps> = ({
             </div>
           </div>
 
-          <button
-            onClick={onOpenSettings}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
-            title="Role & Clearance Settings"
-          >
-            <Settings className="h-4 w-4" />
-          </button>
+          <div className="flex items-center gap-1 shrink-0">
+            <button
+              onClick={onOpenSettings}
+              className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
+              title="Role & Clearance Settings"
+            >
+              <Settings className="h-4 w-4" />
+            </button>
+            {onLogout && (
+              <button
+                onClick={onLogout}
+                className="p-1.5 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 transition-colors"
+                title="Switch Officer / Log Out"
+              >
+                <LogOut className="h-4 w-4" />
+              </button>
+            )}
+          </div>
         </div>
 
       </div>

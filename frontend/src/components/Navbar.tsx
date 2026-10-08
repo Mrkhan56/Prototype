@@ -26,6 +26,8 @@ interface NavbarProps {
   searchQuery?: string;
   onSearchChange?: (query: string) => void;
   onSearchSubmit?: () => void;
+  onLogout?: () => void;
+  onSwitchOfficer?: () => void;
 }
 
 const CLASSIFICATION_PILL: Record<ClassificationLevel, { bg: string; text: string; border: string }> = {
@@ -45,6 +47,8 @@ export const Navbar: React.FC<NavbarProps> = ({
   searchQuery = "",
   onSearchChange,
   onSearchSubmit,
+  onLogout,
+  onSwitchOfficer,
 }) => {
   const [roleDropdownOpen, setRoleDropdownOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
@@ -148,74 +152,130 @@ export const Navbar: React.FC<NavbarProps> = ({
           <span className="hidden sm:inline">Upload</span>
         </button>
 
-        {/* Role Switcher dropdown */}
+        {/* Officer Duty Session & Switcher */}
         <div className="relative">
           <button
             onClick={() => setRoleDropdownOpen(!roleDropdownOpen)}
-            className="flex items-center gap-1.5 p-1.5 rounded-xl border border-[#E7E3DA] bg-white hover:bg-slate-50 transition-all text-left"
-            title="Switch Simulated Role"
+            className="flex items-center gap-2 p-1.5 rounded-xl border border-[#E7E3DA] bg-white hover:bg-slate-50 transition-all text-left shadow-sm"
+            title="Officer Session & Clearance"
           >
-            <div className="h-7 w-7 rounded-lg bg-[#FAF8F5] border border-[#E7E3DA] text-slate-700 flex items-center justify-center font-bold text-xs">
+            <div className="h-7 w-7 rounded-lg bg-[#152028] text-[#EAA037] flex items-center justify-center font-bold text-xs shrink-0 shadow-inner">
               {currentUser.name.charAt(0)}
             </div>
             <div className="hidden xl:block text-left pr-1">
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-1.5">
                 <span className="text-xs font-semibold text-slate-800">{currentUser.name}</span>
-                <span className={`text-[8px] px-1 py-0.2 rounded font-bold ${classStyle.bg} ${classStyle.text} border ${classStyle.border}`}>
-                  {currentUser.max_classification.substring(0, 3)}
+                <span className={`text-[8px] px-1.5 py-0.5 rounded font-bold font-mono ${classStyle.bg} ${classStyle.text} border ${classStyle.border}`}>
+                  {currentUser.max_classification.substring(0, 4)}
                 </span>
               </div>
+              <p className="text-[10px] text-slate-400 font-medium">
+                {currentRole.replace(/_/g, " ")} • {currentUser.badge_id}
+              </p>
             </div>
             <ChevronDown className="h-3 w-3 text-slate-400 ml-0.5" />
           </button>
 
           {roleDropdownOpen && (
-            <div className="absolute right-0 mt-2 w-72 rounded-2xl border border-[#E7E3DA] bg-white p-2 shadow-2xl z-50 animate-fadeIn">
-              <div className="px-2.5 py-1.5 border-b border-slate-100 mb-1">
-                <p className="text-[11px] font-bold uppercase tracking-wider text-slate-700">Simulate Security Role</p>
-                <p className="text-[10px] text-slate-400">Test role-gated views & redaction clearance</p>
+            <div className="absolute right-0 mt-2 w-80 rounded-2xl border border-[#E7E3DA] bg-white p-3 shadow-2xl z-50 animate-fadeIn">
+              {/* Active Officer Identity Banner */}
+              <div className="p-2.5 rounded-xl bg-[#FAF8F5] border border-[#E7E3DA] mb-2.5">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 font-mono">
+                    Active Duty Officer
+                  </span>
+                  <span className={`text-[9px] font-mono px-1.5 py-0.2 rounded font-bold uppercase border ${classStyle.bg} ${classStyle.text} ${classStyle.border}`}>
+                    {currentUser.max_classification}
+                  </span>
+                </div>
+                <p className="text-xs font-bold text-slate-900">{currentUser.name}</p>
+                <p className="text-[11px] text-slate-600 font-medium mt-0.5">{currentRole.replace(/_/g, " ")}</p>
+                <div className="flex items-center justify-between pt-1.5 mt-1.5 border-t border-[#E7E3DA] text-[10px] text-slate-500 font-mono">
+                  <span>BADGE: {currentUser.badge_id}</span>
+                  <span className="truncate max-w-[140px] text-right">{currentUser.department}</span>
+                </div>
               </div>
-              <div className="max-h-64 overflow-y-auto space-y-1">
-                {Object.values(UserRole).map((role) => {
-                  const user = MOCK_USERS[role];
-                  if (!user) return null;
-                  const isSelected = currentRole === role;
-                  return (
-                    <button
-                      key={role}
-                      onClick={() => {
-                        setCurrentRole(role);
-                        setRoleDropdownOpen(false);
-                      }}
-                      className={`w-full flex items-center justify-between px-2.5 py-2 rounded-xl text-xs transition-colors ${
-                        isSelected
-                          ? "bg-[#FEF7EA] text-[#92400E] font-semibold border border-[#FCD34D]"
-                          : "text-slate-700 hover:bg-slate-50"
-                      }`}
-                    >
-                      <div className="text-left">
-                        <div className="flex items-center gap-1.5">
-                          <span>{role.replace(/_/g, " ")}</span>
-                          {isSelected && <UserCheck className="h-3.5 w-3.5 text-[#EAA037]" />}
+
+              {/* Action: Switch Officer / Re-authenticate */}
+              <div className="space-y-1 mb-2">
+                <button
+                  onClick={() => {
+                    setRoleDropdownOpen(false);
+                    if (onSwitchOfficer) onSwitchOfficer();
+                    else if (onLogout) onLogout();
+                  }}
+                  className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold bg-[#FEF7EA] hover:bg-[#FDEFD3] text-[#92400E] border border-[#FCD34D] transition-colors"
+                >
+                  <div className="flex items-center gap-2">
+                    <UserCheck className="h-4 w-4 text-[#EAA037]" />
+                    <span>Switch Officer Persona</span>
+                  </div>
+                  <span className="text-[10px] font-mono">Gateway →</span>
+                </button>
+
+                {onLogout && (
+                  <button
+                    onClick={() => {
+                      setRoleDropdownOpen(false);
+                      onLogout();
+                    }}
+                    className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold text-rose-700 hover:bg-rose-50 border border-transparent hover:border-rose-200 transition-colors"
+                  >
+                    <div className="flex items-center gap-2">
+                      <LogOut className="h-4 w-4 text-rose-600" />
+                      <span>Sign Out of CaseVault</span>
+                    </div>
+                  </button>
+                )}
+              </div>
+
+              {/* Quick Switch List */}
+              <div className="pt-2 border-t border-slate-100">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 px-1 mb-1">
+                  Quick Switch (Simulate)
+                </p>
+                <div className="max-h-48 overflow-y-auto space-y-1">
+                  {Object.values(UserRole).map((role) => {
+                    const user = MOCK_USERS[role];
+                    if (!user) return null;
+                    const isSelected = currentRole === role;
+                    return (
+                      <button
+                        key={role}
+                        onClick={() => {
+                          setCurrentRole(role);
+                          setRoleDropdownOpen(false);
+                        }}
+                        className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs transition-colors ${
+                          isSelected
+                            ? "bg-[#FEF7EA] text-[#92400E] font-semibold"
+                            : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                        }`}
+                      >
+                        <div className="text-left truncate pr-2">
+                          <span className="truncate block font-medium">{role.replace(/_/g, " ")}</span>
+                          <span className="text-[10px] text-slate-400 block truncate">{user.name}</span>
                         </div>
-                        <div className="text-[10px] text-slate-400">{user.name} ({user.department})</div>
-                      </div>
-                      <span className="text-[9px] font-mono px-1 py-0.5 rounded bg-slate-100 text-slate-500">
-                        {user.max_classification.substring(0, 4)}
-                      </span>
-                    </button>
-                  );
-                })}
+                        <span className="text-[9px] font-mono px-1 py-0.5 rounded bg-slate-100 text-slate-500 shrink-0">
+                          {user.max_classification.substring(0, 4)}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
             </div>
           )}
         </div>
 
-        {/* Exit / Info Button */}
+        {/* Exit / Sign Out Button */}
         <button
-          onClick={() => setActiveView("rbac")}
-          className="p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 transition-colors"
-          title="Security Clearance Matrix"
+          onClick={() => {
+            if (onLogout) onLogout();
+            else setActiveView("rbac");
+          }}
+          className="p-2 rounded-xl text-slate-500 hover:text-rose-700 hover:bg-rose-50 border border-transparent hover:border-rose-200 transition-all"
+          title="Sign Out / Switch Officer"
         >
           <LogOut className="h-4 w-4" />
         </button>

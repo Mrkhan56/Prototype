@@ -14,12 +14,21 @@ import { WorkflowDashboard } from "./components/WorkflowDashboard";
 import { AccessControlMatrix } from "./components/AccessControlMatrix";
 import { UploadModal } from "./components/UploadModal";
 import { AuditLogTab } from "./components/AuditLogTab";
+import { AuthGate } from "./components/AuthGate";
 import { getAuditLogs } from "./api/client";
 
 export const App: React.FC = () => {
   const queryClient = useQueryClient();
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
+    return !!sessionStorage.getItem("casevault_auth_role");
+  });
+  const [currentRole, setCurrentRole] = useState<UserRole>(() => {
+    const saved = sessionStorage.getItem("casevault_auth_role") as UserRole;
+    return saved && Object.values(UserRole).includes(saved)
+      ? saved
+      : UserRole.INVESTIGATING_OFFICER;
+  });
   const [activeView, setActiveView] = useState<SidebarView>("cases");
-  const [currentRole, setCurrentRole] = useState<UserRole>(UserRole.INVESTIGATING_OFFICER);
   const [selectedDocId, setSelectedDocId] = useState<string>("doc-001");
   const [uploadModalOpen, setUploadModalOpen] = useState(false);
   const [preselectedCaseId, setPreselectedCaseId] = useState<string | undefined>(undefined);
@@ -63,6 +72,31 @@ export const App: React.FC = () => {
     queryClient.invalidateQueries({ queryKey: ["cases"] });
   }
 
+  function handleAuthenticate(role: UserRole) {
+    setCurrentRole(role);
+    sessionStorage.setItem("casevault_auth_role", role);
+    setIsAuthenticated(true);
+  }
+
+  function handleLogout() {
+    sessionStorage.removeItem("casevault_auth_role");
+    localStorage.removeItem("casevault_auth_role");
+    setIsAuthenticated(false);
+  }
+
+  function handleSwitchOfficer() {
+    setIsAuthenticated(false);
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <AuthGate
+        initialRole={currentRole}
+        onAuthenticate={handleAuthenticate}
+      />
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[#FAF8F5] text-slate-900 flex flex-row">
       
@@ -79,6 +113,7 @@ export const App: React.FC = () => {
           documentCount={128}
           auditCount={4}
           onOpenSettings={() => setActiveView("rbac")}
+          onLogout={handleLogout}
         />
       </div>
 
@@ -108,6 +143,10 @@ export const App: React.FC = () => {
                 setMobileMenuOpen(false);
                 setActiveView("rbac");
               }}
+              onLogout={() => {
+                setMobileMenuOpen(false);
+                handleLogout();
+              }}
             />
           </div>
         </div>
@@ -127,6 +166,8 @@ export const App: React.FC = () => {
           searchQuery={globalSearchQuery}
           onSearchChange={setGlobalSearchQuery}
           onSearchSubmit={() => setActiveView("search")}
+          onLogout={handleLogout}
+          onSwitchOfficer={handleSwitchOfficer}
         />
 
         {/* Dynamic Page Content */}
